@@ -154,7 +154,7 @@ func (h *Host) Connect(term *sshd.Terminal) {
 
 	for {
 		line, err := term.ReadLine()
-		fmt.Printf("[%s] %s: %s\n", time.Now().Format("15:04"), user.Name(), chat.SanitizeData(line))
+
 
 		if err == io.EOF {
 			// Closed
