@@ -146,7 +146,7 @@ func (h *Host) Connect(term *sshd.Terminal) {
 	if h.isOp(term.Conn) {
 		h.Room.Ops.Add(set.Itemize(member.ID(), member))
 	}
-	ratelimit := rateio.NewSimpleLimiter(3, time.Second*0)
+	ratelimit := rateio.NewSimpleLimiter(3, time.Second*3)
 
 	logger.Debugf("[%s] Joined: %s", term.Conn.RemoteAddr(), user.Name())
 
