@@ -25,7 +25,7 @@ func GetPrompt(user *message.User) string {
 	if cfg.Theme != nil {
 		name = cfg.Theme.ColorName(user)
 	}
-	return fmt.Sprintf("[%s] ", name)
+	return fmt.Sprintf("[%s] [%s] ", time.Now().Format("15:04"), name)
 }
 
 // Host is the bridge between sshd and chat modules
@@ -88,6 +88,20 @@ func (h *Host) isOp(conn sshd.Connection) bool {
 	return h.auth.IsOp(key)
 }
 
+func repaint(term *sshd.Terminal, user *message.User) {
+	var minBefore string
+	for {
+		minBefore = time.Now().Format("04")
+		time.Sleep(1 * time.Second)
+		if minBefore != time.Now().Format("04") {
+			prompt := GetPrompt(user)
+			term.SetPrompt(prompt)
+			term.Write([]byte{'\x00'})
+		}
+	}
+}
+
+
 // Connect a specific Terminal to this host and its room.
 func (h *Host) Connect(term *sshd.Terminal) {
 	id := NewIdentity(term.Conn)
@@ -132,12 +146,16 @@ func (h *Host) Connect(term *sshd.Terminal) {
 	if h.isOp(term.Conn) {
 		h.Room.Ops.Add(set.Itemize(member.ID(), member))
 	}
-	ratelimit := rateio.NewSimpleLimiter(3, time.Second*3)
+	ratelimit := rateio.NewSimpleLimiter(3, time.Second*0)
 
 	logger.Debugf("[%s] Joined: %s", term.Conn.RemoteAddr(), user.Name())
 
+	go repaint(term, user)
+
 	for {
 		line, err := term.ReadLine()
+		fmt.Printf("[%s] %s: %s\n", time.Now().Format("15:04"), user.Name(), chat.SanitizeData(line))
+
 		if err == io.EOF {
 			// Closed
 			break
